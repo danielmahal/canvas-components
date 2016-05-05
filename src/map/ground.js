@@ -1,16 +1,20 @@
 import { times } from 'lodash';
 
 import grid from './grid';
-import Terrain from './Terrain';
+import loadTileset from './loadTileset';
 
 const canvas = document.createElement('canvas');
 const context = canvas.getContext('2d');
 
-const grass = new Terrain('grass');
+const grass = loadTileset('terrain/grass', {
+  ...grid.get(),
+  cols: 4,
+  rows: 4,
+});
 
 function render() {
   const { cols, rows, width, height } = grid.get();
-  const tile = grass.tiles[0];
+  const tile = grass.tiles[15];
 
   times(cols, col => {
     times(rows, row => {
