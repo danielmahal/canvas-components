@@ -6,6 +6,9 @@ const context = canvas.getContext('2d');
 
 function render() {
   requestAnimationFrame(render);
+
+  map.render();
+
   context.drawImage(map.canvas, 0, 0);
 }
 

@@ -6,11 +6,7 @@ import loadTileset from './loadTileset';
 const canvas = document.createElement('canvas');
 const context = canvas.getContext('2d');
 
-const grass = loadTileset('terrain/grass', {
-  ...grid.get(),
-  cols: 4,
-  rows: 4,
-});
+const grass = loadTileset('terrain/grass', 4, 4);
 
 function render() {
   const { cols, rows, width, height } = grid.get();
@@ -18,7 +14,7 @@ function render() {
 
   times(cols, col => {
     times(rows, row => {
-      context.drawImage(tile, col * width, row * height);
+      context.drawImage(tile, col * width, row * height, width, height);
     });
   });
 }
@@ -31,6 +27,4 @@ grid.onChange(({cols, rows, width, height}) => {
   render();
 });
 
-export default {
-  canvas,
-};
+export default canvas;

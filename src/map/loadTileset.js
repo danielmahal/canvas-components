@@ -2,7 +2,7 @@ import { times } from 'lodash';
 
 const getImage = require.context('../assets/tilesets', true, /\.png$/);
 
-export default function loadTileset(name, { cols, rows, width, height }) {
+export default function loadTileset(name, cols, rows) {
   const tiles = times(cols * rows, () => document.createElement('canvas'));
   const listeners = [];
   const texture = new Image();
@@ -15,8 +15,8 @@ export default function loadTileset(name, { cols, rows, width, height }) {
       const col = index % cols;
       const row = Math.floor(index / rows);
 
-      canvas.width = width;
-      canvas.height = height;
+      canvas.width = texture.width;
+      canvas.height = texture.width;
 
       const src = {
         x: col * texture.width / cols,
@@ -28,8 +28,8 @@ export default function loadTileset(name, { cols, rows, width, height }) {
       const dest = {
         x: 0,
         y: 0,
-        w: width,
-        h: height,
+        w: texture.width,
+        h: texture.width,
       };
 
       context.drawImage(

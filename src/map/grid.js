@@ -1,4 +1,5 @@
 import Observable from 'observable-state';
+
 import viewport from '../viewport';
 
 const grid = new Observable({
@@ -14,12 +15,13 @@ viewport.onChange((dimensions) => {
   const next = {
     cols: Math.ceil(dimensions.width / width),
     rows: Math.ceil(dimensions.height / height),
-    width,
-    height,
   };
 
   if (cols !== next.cols || rows !== next.rows) {
-    grid.set(next);
+    grid.set({
+      ...grid.get(),
+      ...next,
+    });
   }
 });
 
