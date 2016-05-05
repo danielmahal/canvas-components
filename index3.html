@@ -1,0 +1,152 @@
+<style>body {margin: 0;} canvas {
+  image-rendering: optimizeSpeed;             /* Older versions of FF          */
+  image-rendering: -moz-crisp-edges;          /* FF 6.0+                       */
+  image-rendering: -webkit-optimize-contrast; /* Safari                        */
+  image-rendering: -o-crisp-edges;            /* OS X & Windows Opera (12.02+) */
+  image-rendering: pixelated;                 /* Awesome future-browsers       */
+  -ms-interpolation-mode: nearest-neighbor;   /* IE                            */
+}</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.11.2/lodash.min.js"></script>
+
+<script>
+  const GRID_SIZE = { w: 32, h: 20 };
+
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d');
+  const mouse = { x: window.innerWidth / 2, y: window.innerWidth / 2 };
+
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  function loadTerrainTiles(src, callback) {
+    const tiles = _.times(16, i => document.createElement('canvas'));
+
+    const texture = new Image();
+
+    texture.src = src;
+
+    texture.addEventListener('load', () => {
+      tiles.forEach((tileCanvas, i) => {
+        const tileContext = tileCanvas.getContext('2d');
+        const col = i % 4;
+        const row = Math.floor(i / 4);
+
+        tileCanvas.width = GRID_SIZE.w;
+        tileCanvas.height = GRID_SIZE.h;
+
+        tileContext.drawImage(texture,
+          col * GRID_SIZE.w,
+          row * GRID_SIZE.h,
+          GRID_SIZE.w,
+          GRID_SIZE.h,
+          0,
+          0,
+          GRID_SIZE.w,
+          GRID_SIZE.h
+        );
+      });
+
+      callback();
+    });
+
+    return tiles;
+  }
+
+  const groundTiles = loadTerrainTiles('tiles/ground-bitmask-tiles-reordered.png', render);
+
+  const heightMap = [];
+
+  function getStateAt(col, row) {
+    return heightMap[col] && heightMap[col][row] || false;
+  }
+
+  function render() {
+    context.fillStyle = 'black';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+
+    const cols = canvas.width / GRID_SIZE.w;
+    const rows = canvas.height / GRID_SIZE.h;
+
+    for(var col = 0; col < cols; col++) {
+      for(var row = 0; row < rows; row++) {
+        const state = getStateAt(col, row);
+
+        if(state > 0) {
+          const neighbors = {
+            1: getStateAt(col, row - 1),
+            2: getStateAt(col - 1, row),
+            4: getStateAt(col + 1, row),
+            8: getStateAt(col, row + 1),
+          };
+
+          const tile = _.reduce(neighbors, (result, state, bit) => result + state * bit, 0);
+
+          context.fillStyle = `white`;
+
+          context.save();
+          context.translate(col * GRID_SIZE.w, row * GRID_SIZE.h);
+          context.drawImage(groundTiles[tile], 0, 0);
+          context.strokeRect(0, 0, GRID_SIZE.w, GRID_SIZE.h);
+          context.translate(GRID_SIZE.w / 2, GRID_SIZE.h / 2);
+          context.fillText(tile, 0, 0);
+          context.restore();
+        }
+      }
+    }
+
+    context.restore();
+  }
+
+  function mouseToGrid(e) {
+    return {
+      col: Math.floor(e.clientX / GRID_SIZE.w),
+      row: Math.floor(e.clientY / GRID_SIZE.h)
+    }
+  }
+
+  function modifyTerrain(pos, state) {
+    if(!heightMap[pos.col]) heightMap[pos.col] = [];
+    heightMap[pos.col][pos.row] = state;
+    render();
+  }
+
+  document.addEventListener('contextmenu', e => {
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousedown', e => {
+    let pos = mouseToGrid(e);
+
+    const prevState = heightMap[pos.col] && heightMap[pos.col][pos.row];
+    const state = !prevState;
+
+    modifyTerrain(pos, state);
+
+    function mouseMove(e) {
+      const movePos = mouseToGrid(e);
+
+      if(movePos.col !== pos.col || movePos.row !== pos.row) {
+        modifyTerrain(movePos, state);
+        pos = movePos;
+      }
+    }
+
+    function mouseUp() {
+      document.removeEventListener('mousemove', mouseMove);
+      document.removeEventListener('mouseup', mouseUp);
+    }
+
+    document.addEventListener('mousemove', mouseMove);
+    document.addEventListener('mouseup', mouseUp);
+  });
+
+  window.addEventListener('load', () => {
+    document.body.appendChild(canvas);
+    render();
+  });
+</script>
