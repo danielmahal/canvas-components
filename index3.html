@@ -10,7 +10,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.11.2/lodash.min.js"></script>
 
 <script>
-  const GRID_SIZE = { w: 32, h: 20 };
+  const GRID_SIZE = { w: 32, h: 32 };
 
   const canvas = document.createElement('canvas');
   const context = canvas.getContext('2d');
@@ -19,9 +19,27 @@
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 
+  const wallTiles = loadTerrainTiles('tiles/ground-bitmask-tiles-reordered.png', () => {
+    canvas.style.backgroundImage = `url(${wallTiles[15].toDataURL()})`;
+  });
+
+  const map = {
+    walls: []
+  };
+
+  function pxToGrid(x, y) {
+    return {
+      col: Math.floor(x / GRID_SIZE.w),
+      row: Math.floor(y / GRID_SIZE.h)
+    }
+  }
+
+  function mouseToGrid(e) {
+    return pxToGrid(e.clientX, e.clientY);
+  }
+
   function loadTerrainTiles(src, callback) {
     const tiles = _.times(16, i => document.createElement('canvas'));
-
     const texture = new Image();
 
     texture.src = src;
@@ -35,16 +53,14 @@
         tileCanvas.width = GRID_SIZE.w;
         tileCanvas.height = GRID_SIZE.h;
 
-        tileContext.drawImage(texture,
-          col * GRID_SIZE.w,
-          row * GRID_SIZE.h,
-          GRID_SIZE.w,
-          GRID_SIZE.h,
-          0,
-          0,
-          GRID_SIZE.w,
-          GRID_SIZE.h
-        );
+        const src = {
+          x: col * texture.width / 4,
+          y: row * texture.height / 4,
+          w: texture.width / 4,
+          h: texture.height / 4
+        };
+
+        tileContext.drawImage(texture, src.x, src.y, src.w, src.h, 0, 0, GRID_SIZE.w, GRID_SIZE.h);
       });
 
       callback();
@@ -53,66 +69,66 @@
     return tiles;
   }
 
-  const groundTiles = loadTerrainTiles('tiles/ground-bitmask-tiles-reordered.png', render);
-
-  const heightMap = [];
-
-  function getStateAt(col, row) {
-    return heightMap[col] && heightMap[col][row] || false;
+  function isWallAt(col, row) {
+    return map.walls[col] && map.walls[col][row] || false;
   }
 
-  function render() {
-    context.fillStyle = 'black';
-    context.fillRect(0, 0, canvas.width, canvas.height);
+  function getTileAt(tiles, col, row) {
+    const neighborsStates = {
+      1: isWallAt(col, row - 1),
+      2: isWallAt(col - 1, row),
+      4: isWallAt(col + 1, row),
+      8: isWallAt(col, row + 1),
+    };
 
-    context.textAlign = 'center';
-    context.textBaseline = 'middle';
-    context.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+    const index = _.reduce(neighborsStates, (result, state, bit) => (
+      result + state * bit
+    ), 0);
 
-    const cols = canvas.width / GRID_SIZE.w;
-    const rows = canvas.height / GRID_SIZE.h;
-
-    for(var col = 0; col < cols; col++) {
-      for(var row = 0; row < rows; row++) {
-        const state = getStateAt(col, row);
-
-        if(state > 0) {
-          const neighbors = {
-            1: getStateAt(col, row - 1),
-            2: getStateAt(col - 1, row),
-            4: getStateAt(col + 1, row),
-            8: getStateAt(col, row + 1),
-          };
-
-          const tile = _.reduce(neighbors, (result, state, bit) => result + state * bit, 0);
-
-          context.fillStyle = `white`;
-
-          context.save();
-          context.translate(col * GRID_SIZE.w, row * GRID_SIZE.h);
-          context.drawImage(groundTiles[tile], 0, 0);
-          context.strokeRect(0, 0, GRID_SIZE.w, GRID_SIZE.h);
-          context.translate(GRID_SIZE.w / 2, GRID_SIZE.h / 2);
-          context.fillText(tile, 0, 0);
-          context.restore();
-        }
-      }
-    }
-
-    context.restore();
+    return tiles[index];
   }
 
-  function mouseToGrid(e) {
-    return {
-      col: Math.floor(e.clientX / GRID_SIZE.w),
-      row: Math.floor(e.clientY / GRID_SIZE.h)
+  function renderTileAt(col, row) {
+    context.clearRect(col * GRID_SIZE.w, row * GRID_SIZE.h, GRID_SIZE.w, GRID_SIZE.h);
+
+    if(isWallAt(col, row)) {
+      const tile = getTileAt(wallTiles, col, row);
+
+      context.fillStyle = `white`;
+      context.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+
+      context.save();
+      context.translate(col * GRID_SIZE.w, row * GRID_SIZE.h);
+      context.drawImage(tile, 0, 0, GRID_SIZE.w, GRID_SIZE.h);
+      context.strokeRect(0, 0, GRID_SIZE.w, GRID_SIZE.h);
+      context.translate(GRID_SIZE.w / 2, GRID_SIZE.h / 2);
+
+      context.restore();
     }
   }
 
-  function modifyTerrain(pos, state) {
-    if(!heightMap[pos.col]) heightMap[pos.col] = [];
-    heightMap[pos.col][pos.row] = state;
-    render();
+  function modifyWalls(pos, state) {
+    const col = pos.col;
+    const row = pos.row;
+
+    if(!map.walls[col]) {
+      map.walls[col] = [];
+    }
+
+    map.walls[col][row] = state;
+
+    const neighbors = [
+      [col, row - 1],
+      [col - 1, row],
+      [col + 1, row],
+      [col, row + 1]
+    ];
+
+    neighbors.forEach(neighbor => {
+      renderTileAt(neighbor[0], neighbor[1])
+    });
+
+    renderTileAt(col, row);
   }
 
   document.addEventListener('contextmenu', e => {
@@ -122,16 +138,16 @@
   document.addEventListener('mousedown', e => {
     let pos = mouseToGrid(e);
 
-    const prevState = heightMap[pos.col] && heightMap[pos.col][pos.row];
+    const prevState = map.walls[pos.col] && map.walls[pos.col][pos.row];
     const state = !prevState;
 
-    modifyTerrain(pos, state);
+    modifyWalls(pos, state);
 
     function mouseMove(e) {
       const movePos = mouseToGrid(e);
 
       if(movePos.col !== pos.col || movePos.row !== pos.row) {
-        modifyTerrain(movePos, state);
+        modifyWalls(movePos, state);
         pos = movePos;
       }
     }
@@ -147,6 +163,6 @@
 
   window.addEventListener('load', () => {
     document.body.appendChild(canvas);
-    render();
+    // renderMap();
   });
 </script>
