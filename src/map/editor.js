@@ -1,6 +1,7 @@
 import viewport from '../viewport';
 import grid from './grid';
 import mouse from './mouse';
+import walls from './walls';
 
 const canvas = document.createElement('canvas');
 const context = canvas.getContext('2d');
@@ -21,5 +22,43 @@ viewport.onChange(({ width, height }) => {
 });
 
 mouse.onChange(render);
+
+function modifyWall(col, row, state) {
+  const modified = walls.walls.get();
+
+  if (!modified[col]) {
+    modified[col] = [];
+  }
+
+  modified[col][row] = state;
+
+  walls.walls.set(modified);
+}
+
+document.addEventListener('mousedown', () => {
+  let pos = mouse.get();
+
+  const modified = walls.walls.get();
+  const state = !(modified[pos.col] && modified[pos.col][pos.row]);
+
+  modifyWall(pos.col, pos.row, state);
+
+  function onMouseMove() {
+    const move = mouse.get();
+
+    if (move.col !== pos.col || move.row !== pos.row) {
+      modifyWall(move.col, move.row, state);
+      pos = move;
+    }
+  }
+
+  function onMouseUp() {
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
+  }
+
+  document.addEventListener('mousemove', onMouseMove);
+  document.addEventListener('mouseup', onMouseUp);
+});
 
 export default canvas;
