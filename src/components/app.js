@@ -5,7 +5,7 @@ import cache from '../cache';
 const canvas = document.createElement('canvas');
 const context = canvas.getContext('2d');
 
-export default function game({ viewport, timer }) {
+export default function app({ viewport, timer }) {
   const { width, height } = viewport;
   const { time } = timer;
 
