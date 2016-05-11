@@ -1,23 +1,35 @@
-import viewport from './viewport';
-import map from './map';
+import app from './components/app';
+import store from './store';
 
 const canvas = document.createElement('canvas');
 const context = canvas.getContext('2d');
 
 function render() {
-  requestAnimationFrame(render);
-
-  map.render();
-
-  context.drawImage(map.canvas, 0, 0);
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  context.drawImage(app(store.getState()), 0, 0);
 }
 
-viewport.onChange(({ width, height }) => {
-  canvas.width = width;
-  canvas.height = height;
+store.subscribe(render);
+
+function tick() {
+  requestAnimationFrame(tick);
+  store.dispatch({
+    type: 'TICK',
+    time: Date.now(),
+  });
+}
+
+window.addEventListener('resize', () => {
+  store.dispatch({
+    type: 'VIEWPORT_SIZE',
+    width: window.innerWidth,
+    height: window.innerHeight,
+  });
 });
 
 window.addEventListener('load', () => {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
   document.body.appendChild(canvas);
-  render();
+  tick();
 });
