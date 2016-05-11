@@ -1,23 +1,19 @@
 import app from './components/app';
 import store from './store';
 
-const canvas = document.createElement('canvas');
-const context = canvas.getContext('2d');
-
 function render() {
   const state = store.getState();
+  const canvas = app(state);
 
-  canvas.width = state.viewport.width;
-  canvas.height = state.viewport.height;
-
-  context.clearRect(0, 0, canvas.width, canvas.height);
-  context.drawImage(app(state), 0, 0);
+  if (!canvas.parentNode) {
+    document.body.appendChild(canvas);
+  }
 }
 
 store.subscribe(render);
 
-function tick() {
-  requestAnimationFrame(tick);
+function update() {
+  requestAnimationFrame(update);
   store.dispatch({
     type: 'TICK',
     time: Date.now(),
@@ -32,9 +28,4 @@ window.addEventListener('resize', () => {
   });
 });
 
-window.addEventListener('load', () => {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  document.body.appendChild(canvas);
-  tick();
-});
+window.addEventListener('load', update);
