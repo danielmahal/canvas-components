@@ -5,8 +5,13 @@ const canvas = document.createElement('canvas');
 const context = canvas.getContext('2d');
 
 function render() {
+  const state = store.getState();
+
+  canvas.width = state.viewport.width;
+  canvas.height = state.viewport.height;
+
   context.clearRect(0, 0, canvas.width, canvas.height);
-  context.drawImage(app(store.getState()), 0, 0);
+  context.drawImage(app(state), 0, 0);
 }
 
 store.subscribe(render);
