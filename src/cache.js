@@ -1,7 +1,7 @@
 const store = {};
 
 export default function cache(fn, state) {
-  const key = [fn.name || fn.toString(), JSON.stringify(state)].join('-');
+  const key = [fn.toString(), JSON.stringify(state)].join('-');
 
   if (store[key]) {
     return store[key];

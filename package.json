@@ -4,9 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "webpack -p",
+    "build": "rm -rf build && NODE_ENV=production webpack -p",
     "start": "webpack -w & nws -d ./build",
-    "deploy": "npm run build && surge -p ./build -d canvas-components.surge.sh",
+    "deploy": "npm run build && surge -p ./build -d canvas-components.surge.sh"
   },
   "author": "",
   "license": "ISC",

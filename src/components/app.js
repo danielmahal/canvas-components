@@ -1,4 +1,5 @@
 import circle from './circle';
+import square from './square';
 import cache from '../cache';
 
 const canvas = document.createElement('canvas');
@@ -22,6 +23,12 @@ export default function game({ viewport, timer }) {
   context.restore();
   context.translate(Math.cos(time / 1000) * 100, 0);
   context.drawImage(cache(circle, { radius }), 0, 0);
+  context.restore();
+
+  context.save();
+  context.translate(50, 50);
+  context.rotate(Math.sin(time / 1000));
+  context.drawImage(cache(square, { size: 50 }), -25, -25);
   context.restore();
 
   return canvas;

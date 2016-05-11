@@ -1,6 +1,10 @@
+const webpack = require('webpack');
+
+const dev = process.env.NODE_ENV !== 'production';
+
 module.exports = {
   context: __dirname + '/src',
-  devtool: 'source-map',
+  devtool: dev && 'source-map',
 
   entry: [
     './index.js',
@@ -30,4 +34,12 @@ module.exports = {
   resolve: {
     extensions: ['', '.js', '.jsx'],
   },
+
+  plugins: [
+    new webpack.DefinePlugin({
+      'process.env': {
+        'NODE_ENV': `"${dev ? 'development' : 'production'}"`,
+      },
+    }),
+  ],
 };
