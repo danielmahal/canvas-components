@@ -4,7 +4,10 @@ import cache from '../cache';
 const canvas = document.createElement('canvas');
 const context = canvas.getContext('2d');
 
-export default function game({ width, height, time }) {
+export default function game({ viewport, timer }) {
+  const { width, height } = viewport;
+  const { time } = timer;
+
   canvas.width = width;
   canvas.height = height;
 
