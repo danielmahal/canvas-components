@@ -4,7 +4,7 @@ const initialState = {
 };
 
 export default function viewport(state = initialState, action) {
-  if (action.type === 'VIEWPORT_SIZE') {
+  if (action.type === 'RESIZE') {
     return {
       ...state,
       width: action.width,

@@ -15,14 +15,20 @@ export default function app({ viewport, timer }) {
   const radius = Math.round(width / 10);
 
   context.save();
+
   context.translate(width / 2, height / 2);
   context.translate(-radius, -radius);
+
   context.save();
   context.translate(Math.sin(time / 1000) * 100, 0);
   context.drawImage(cache(circle, { radius }), 0, 0);
   context.restore();
+
+  context.save();
   context.translate(Math.cos(time / 1000) * 100, 0);
   context.drawImage(cache(circle, { radius }), 0, 0);
+  context.restore();
+
   context.restore();
 
   context.save();

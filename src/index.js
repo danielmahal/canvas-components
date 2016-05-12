@@ -1,31 +1,25 @@
 import app from './components/app';
 import store from './store';
 
-function render() {
-  const state = store.getState();
-  const canvas = app(state);
+const render = () => app(store.getState());
 
-  if (!canvas.parentNode) {
-    document.body.appendChild(canvas);
-  }
-}
-
-store.subscribe(render);
-
-function update() {
-  requestAnimationFrame(update);
+const tick = () => {
+  requestAnimationFrame(tick);
   store.dispatch({
     type: 'TICK',
     time: Date.now(),
   });
-}
+};
 
-window.addEventListener('resize', () => {
-  store.dispatch({
-    type: 'VIEWPORT_SIZE',
-    width: window.innerWidth,
-    height: window.innerHeight,
-  });
+window.addEventListener('resize', () => store.dispatch({
+  type: 'RESIZE',
+  width: window.innerWidth,
+  height: window.innerHeight,
+}));
+
+window.addEventListener('load', () => {
+  document.body.appendChild(render());
+  tick();
 });
 
-window.addEventListener('load', update);
+store.subscribe(render);
