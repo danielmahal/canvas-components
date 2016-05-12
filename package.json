@@ -2,7 +2,6 @@
   "name": "canvas-components",
   "author": "Daniel Mahal <daniel@internetfriendsforever.com>",
   "version": "0.0.1",
-  "description": "Simple reactive canvas components w/caching example using Redux + Webpack/Babel",
   "scripts": {
     "build": "rm -rf build && NODE_ENV=production webpack -p",
     "start": "webpack -w & nws -d ./build",
