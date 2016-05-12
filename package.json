@@ -1,15 +1,13 @@
 {
   "name": "canvas-components",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "author": "Daniel Mahal <daniel@internetfriendsforever.com>",
+  "version": "0.0.1",
+  "description": "Simple reactive canvas components w/caching example using Redux + Webpack/Babel",
   "scripts": {
     "build": "rm -rf build && NODE_ENV=production webpack -p",
     "start": "webpack -w & nws -d ./build",
     "deploy": "npm run build && surge -p ./build -d canvas-components.surge.sh"
   },
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "babel-core": "^6.8.0",
     "babel-loader": "^6.2.4",
